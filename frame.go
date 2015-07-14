@@ -1,29 +1,30 @@
 package widget
 
 import (
-	"./style"
 	//	"fmt"
 	c "image/color"
 	"image/draw"
 )
 
+var FrameDefaultBorder = Border{Sides{map[Side]int{All: 1}}, map[Side]c.Color{All: c.Black}}
+var FrameDefaultPadding = Padding{Sides{map[Side]int{All: 5}}}
+var FrameDefaultMargin = Margin{Sides{map[Side]int{All: 5}}}
+var FrameDefaultBackground = Background{c.White}
+var FrameDefaultNormalBoxState = &BoxState{FrameDefaultBackground, FrameDefaultBorder, FrameDefaultMargin, FrameDefaultPadding}
+var FrameDefault = &Box{map[State]*BoxState{Normal: FrameDefaultNormalBoxState}}
+
 type Frame struct {
 	*Size
-	*style.Box
+	*Box
 	layout Layout
 	parent Widget
-	state  style.State
+	state  State
 }
 
 func NewFrame(parent Widget) *Frame {
-	box := style.FrameDefault
-	box.Hover().SetBackground(style.NewBackground(c.White))
-	box.Hover().Border().SetTop(style.NewBorderSide(5, c.Black))
-	box.Hover().Border().Bottom().SetColor(c.Black)
-	box.Hover().Border().Left().SetColor(c.Black)
-	box.Hover().Border().Right().SetColor(c.Black)
-
-	ret := &Frame{NewSize(), box, &Vertical{}, parent, style.Normal}
+	ret := &Frame{NewSize(), FrameDefault, &Vertical{}, parent, Normal}
+	ret.SetBackground(Hover, NewBackground(c.Black))
+	ret.SetBorderColor(Hover, All, c.White)
 
 	if parent != nil {
 		parent.Layout().AddChild(ret)
@@ -32,12 +33,12 @@ func NewFrame(parent Widget) *Frame {
 }
 
 func (this *Frame) MouseEnteredEvent() bool {
-	this.state |= style.Hover
+	this.state |= Hover
 	return true
 }
 
 func (this *Frame) MouseExitedEvent() bool {
-	this.state &^= style.Hover
+	this.state &^= Hover
 	return true
 }
 
@@ -67,4 +68,30 @@ func (this *Frame) Draw(img draw.Image) {
 		gc.FillStroke()
 		gc.Restore() */
 
+}
+
+func (this *Frame) SetBorderWidth(state State, side Side, width int) {
+	this.Box = this.Clone()
+	this.NewState(state)
+	this.Box.states[state].border.SetWidth(side, width)
+}
+func (this *Frame) SetBorderColor(state State, side Side, color c.Color) {
+	this.Box = this.Clone()
+	this.NewState(state)
+	this.Box.states[state].border.SetColor(side, color)
+}
+func (this *Frame) SetBackground(state State, background *Background) {
+	this.Box = this.Clone()
+	this.NewState(state)
+	this.Box.states[state].background = *background
+}
+func (this *Frame) SetMargin(state State, side Side, width int) {
+	this.Box = this.Clone()
+	this.NewState(state)
+	this.Box.states[state].margin.SetWidth(side, width)
+}
+func (this *Frame) SetPadding(state State, side Side, width int) {
+	this.Box = this.Clone()
+	this.NewState(state)
+	this.Box.states[state].padding.SetWidth(side, width)
 }
