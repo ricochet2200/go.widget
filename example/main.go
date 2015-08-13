@@ -4,7 +4,6 @@ import (
 	"../"
 	"fmt"
 	"github.com/skelterjohn/go.wde"
-	_ "github.com/skelterjohn/go.wde/cocoa"
 )
 
 func main() {
