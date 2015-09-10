@@ -4,7 +4,9 @@ import (
 	"math"
 )
 
+// This interface is inherited by Widget
 type SizeI interface {
+	SetWidth(int)
 	Width() int
 	SetMaxWidth(int)
 	MaxWidth() int
@@ -12,6 +14,7 @@ type SizeI interface {
 	MinWidth() int
 	SetHorizontalStretch(int)
 	HorizontalStretch() int
+	SetHeight(int)
 	Height() int
 	SetMaxHeight(int)
 	MaxHeight() int
@@ -33,7 +36,14 @@ type Size struct {
 }
 
 func NewSize() *Size {
-	return &Size{0, 0, math.MaxInt16, 1, 0, 0, math.MaxInt16, 1}
+	return &Size{0, 0, math.MaxInt32, 1, 0, 0, math.MaxInt32, 1}
+}
+
+// This function is called frequently by layouts and will likely change
+// whatever value you use.  In general, users should call Set{Max,Min}Width
+// for the size to persist
+func (this *Size) SetWidth(width int) {
+	this.width = width
 }
 
 func (this *Size) Width() int {
@@ -57,8 +67,16 @@ func (this *Size) SetHorizontalStretch(stretch int) {
 func (this *Size) HorizontalStretch() int {
 	return this.horizontalStretch
 }
+
+// This function is called frequently by layouts and will likely change
+// whatever value you use.  In general, users should call Set{Max,Min}Height
+// for the size to persist
+func (this *Size) SetHeight(height int) {
+	this.height = height
+}
+
 func (this *Size) Height() int {
-	return this.width
+	return this.height
 }
 func (this *Size) SetMaxHeight(max int) {
 	this.maxHeight = max

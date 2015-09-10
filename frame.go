@@ -1,7 +1,8 @@
 package widget
 
 import (
-	//	"fmt"
+	"fmt"
+	"image"
 	c "image/color"
 	"image/draw"
 )
@@ -23,6 +24,7 @@ type Frame struct {
 
 func NewFrame(parent Widget) *Frame {
 	ret := &Frame{NewSize(), FrameDefault, &Vertical{}, parent, Normal}
+	ret.layout = NewVertical(ret)
 	ret.SetBackground(Hover, NewBackground(c.Black))
 	ret.SetBorderColor(Hover, All, c.White)
 
@@ -32,14 +34,80 @@ func NewFrame(parent Widget) *Frame {
 	return ret
 }
 
-func (this *Frame) MouseEnteredEvent() bool {
-	this.state |= Hover
+func (this *Frame) State() State {
+	return this.state
+}
+
+func (this *Frame) Offset() image.Point {
+
+	parent := this.parent
+	var child Widget = this
+
+	location := image.Point{0, 0}
+
+	for parent != nil {
+		offset := parent.Layout().ChildOffset(child)
+		location.X += offset.X
+		location.Y += offset.Y
+		child = parent
+		parent = parent.Parent()
+	}
+	return location
+}
+
+func (this *Frame) MouseEnteredEvent(where image.Point) bool {
+
+	offset := this.Offset()
+	rect := image.Rectangle{offset, image.Point{offset.X + this.Width(), offset.Y + this.Height()}}
+	if !where.In(rect) { // Pointer not on this widget
+		return false
+	}
+
+	// Check if child accepts hover. If not, this widget accepts hover
+	hover := false
+	for _, child := range this.layout.Children() {
+		hover = child.MouseEnteredEvent(where) || hover
+	}
+
+	if !hover {
+		this.state |= Hover
+		fmt.Println("Hover")
+	}
 	return true
 }
 
 func (this *Frame) MouseExitedEvent() bool {
 	this.state &^= Hover
+	fmt.Println("UnHover")
+	for _, child := range this.layout.Children() {
+		child.MouseExitedEvent()
+	}
 	return true
+}
+
+func (this *Frame) MouseMoveEvent(where image.Point, from image.Point) bool {
+
+	offset := this.Offset()
+	rect := image.Rectangle{offset, image.Point{offset.X + this.Width(), offset.Y + this.Height()}}
+	if !from.In(rect) && !where.In(rect) { // Stray event, abort...
+		return false
+	}
+
+	if from.In(rect) && !where.In(rect) { // Use to be hovered over
+		fmt.Println("Used to be hovered")
+		this.MouseExitedEvent()
+		return true
+	} else if !from.In(rect) && where.In(rect) {
+		this.MouseEnteredEvent(where)
+		return true
+	}
+
+	accept := false
+	for _, child := range this.layout.Children() {
+		accept = child.MouseMoveEvent(where, from) || accept
+
+	}
+	return accept
 }
 
 func (this Frame) Parent() Widget {
@@ -51,11 +119,14 @@ func (this Frame) Layout() Layout {
 }
 
 func (this *Frame) Update() {
-
+	this.layout.Update()
 }
 
 func (this *Frame) Draw(img draw.Image) {
+
 	this.Box.Draw(img, this.state)
+	this.layout.Draw(img)
+
 	/*	this.DrawBackground(img, this.state)
 
 		gc := draw2d.NewGraphicContext(img)
