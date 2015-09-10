@@ -3,6 +3,7 @@ package widget
 import (
 	"errors"
 	"github.com/llgcode/draw2d"
+	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/draw"
 	"image/gif"
@@ -54,7 +55,7 @@ func NewLabel(text string, imagePath string, parent Widget) (*Label, error) {
 
 func (this *Label) Draw(img draw.Image) {
 	this.Frame.Draw(img)
-	gc := draw2d.NewGraphicContext(img)
+	gc := draw2dimg.NewGraphicContext(img)
 	gc.FillStroke()
 	gc.SetFontData(draw2d.FontData{"Monterey", draw2d.FontFamilyMono, draw2d.FontStyleBold | draw2d.FontStyleItalic})
 	gc.SetFontData(draw2d.FontData{"Monterey", draw2d.FontFamilyMono, draw2d.FontStyleBold | draw2d.FontStyleItalic})

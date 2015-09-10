@@ -2,7 +2,7 @@ package widget
 
 import (
 	"fmt"
-	"github.com/llgcode/draw2d"
+	"github.com/llgcode/draw2d/draw2dimg"
 	c "image/color"
 	"image/draw"
 )
@@ -142,7 +142,7 @@ func (this *Box) Draw(img draw.Image, state State) {
 	rect.Min.X += box.Margin(Left)
 	rect.Max.X -= box.Margin(Right)
 
-	gc := draw2d.NewGraphicContext(img)
+	gc := draw2dimg.NewGraphicContext(img)
 
 	// Top
 	gc.SetStrokeColor(box.BorderColor(Top))
