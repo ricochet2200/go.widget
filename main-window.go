@@ -5,6 +5,7 @@ import (
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
+	"image/draw"
 )
 
 type MainWindow struct {
@@ -25,7 +26,7 @@ func NewMainWindow(width int, height int) *MainWindow {
 	return &w
 }
 
-func (this *MainWindow) Draw() {
+func (this *MainWindow) Draw(unused draw.Image) {
 
 	screen := this.window.Screen()
 	img := image.NewRGBA(image.Rect(0, 0, 500, 500))
@@ -34,34 +35,33 @@ func (this *MainWindow) Draw() {
 	this.window.FlushImage(img.Bounds())
 }
 
-func (this *MainWindow) Update() bool {
+func (this *MainWindow) Update() {
 	this.Frame.Update()
-	this.Draw()
+	this.Draw(nil)
 	for e := range this.window.EventChan() {
 		switch e.(type) {
 		case wde.CloseEvent:
 			wde.Stop()
-			return false
+			return
 		case wde.MouseEnteredEvent:
 			entered := e.(wde.MouseEnteredEvent)
 			this.Frame.MouseEnteredEvent(entered.Where)
 			this.Frame.Update()
-			this.Draw()
+			this.Draw(nil)
 		case wde.MouseExitedEvent:
 			this.Frame.MouseExitedEvent()
 			this.Frame.Update()
-			this.Draw()
+			this.Draw(nil)
 		case wde.MouseDownEvent:
 			this.Frame.Update()
-			this.Draw()
+			this.Draw(nil)
 		case wde.MouseUpEvent:
 			this.Frame.Update()
-			this.Draw()
+			this.Draw(nil)
 		case wde.MouseMovedEvent:
 			moved := e.(wde.MouseMovedEvent)
 			this.Frame.MouseMoveEvent(moved.MouseEvent.Where, moved.From)
-			this.Draw()
+			this.Draw(nil)
 		}
 	}
-	return true
 }
