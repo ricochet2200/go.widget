@@ -3,6 +3,7 @@ package widget
 import (
 	"fmt"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"image"
 	c "image/color"
 	"image/draw"
 )
@@ -126,44 +127,64 @@ func (this *Box) Clone() *Box {
 	return ret
 }
 
-func (this *Box) Draw(img draw.Image, state State) {
-
-	box := this.State(Normal)
-	if state&Hover > 0 {
-		box = this.State(Hover)
-		fmt.Println("draw hover")
-	}
-
-	box.background.Draw(img)
-
+func (this *Box) BorderImage(img draw.Image, state State) draw.Image {
+	box := this.State(state)
 	rect := img.Bounds()
 	rect.Min.Y += box.Margin(Top)
 	rect.Max.Y -= box.Margin(Bottom)
 	rect.Min.X += box.Margin(Left)
 	rect.Max.X -= box.Margin(Right)
+	return img.(*image.RGBA).SubImage(rect).(draw.Image)
+}
 
+func (this *Box) ContentImage(img draw.Image, state State) draw.Image {
+	box := this.State(state)
+	rect := img.Bounds()
+	rect.Min.Y += (box.Margin(Top) + box.BorderWidth(Top) + box.Padding(Top))
+	rect.Max.Y -= (box.Margin(Bottom) + box.BorderWidth(Bottom) + box.Padding(Bottom))
+	rect.Min.X += (box.Margin(Left) + box.BorderWidth(Left) + box.Padding(Left))
+	rect.Max.X -= (box.Margin(Right) + box.BorderWidth(Right) + box.Padding(Right))
+	return img.(*image.RGBA).SubImage(rect).(draw.Image)
+}
+
+func (this *Box) Draw(img draw.Image, state State) {
+
+	box := this.State(state)
+	borderImage := this.BorderImage(img, state)
+
+	box.background.Draw(borderImage)
+
+	rect := borderImage.Bounds()
+
+	fmt.Println("img bounds:", img.Bounds(), "bi bounds:", borderImage.Bounds())
 	gc := draw2dimg.NewGraphicContext(img)
 
 	// Top
 	gc.SetStrokeColor(box.BorderColor(Top))
 	gc.SetLineWidth(float64(box.BorderWidth(Top)))
-	gc.MoveTo(float64(rect.Min.X), float64(rect.Min.Y))
-	gc.LineTo(float64(rect.Max.X), float64(rect.Min.Y))
+	offset := float64(box.BorderWidth(Top)) / 2
+	gc.MoveTo(float64(rect.Min.X)+offset, float64(rect.Min.Y)+offset)
+	gc.LineTo(float64(rect.Max.X)-offset, float64(rect.Min.Y)+offset)
 
 	// Right
+	fmt.Println("Right: ", box.BorderColor(Right), box.BorderWidth(Right))
 	gc.SetStrokeColor(box.BorderColor(Right))
 	gc.SetLineWidth(float64(box.BorderWidth(Right)))
-	gc.LineTo(float64(rect.Max.X), float64(rect.Max.Y))
+	offset = float64(box.BorderWidth(Right)) / 2
+	gc.LineTo(float64(rect.Max.X)-offset, float64(rect.Max.Y)-offset)
 
 	// Bottom
 	gc.SetStrokeColor(box.BorderColor(Bottom))
 	gc.SetLineWidth(float64(box.BorderWidth(Bottom)))
-	gc.LineTo(float64(rect.Min.X), float64(rect.Max.Y))
+	offset = float64(box.BorderWidth(Bottom)) / 2
+	gc.LineTo(float64(rect.Min.X)+offset, float64(rect.Max.Y)-offset)
 
 	// Left
-	gc.SetStrokeColor(box.BorderColor(Right))
-	gc.SetLineWidth(float64(box.BorderWidth(Right)))
-	gc.LineTo(float64(rect.Min.X), float64(rect.Min.Y))
+	gc.SetStrokeColor(box.BorderColor(Left))
+	gc.SetLineWidth(float64(box.BorderWidth(Left)))
+	offset = float64(box.BorderWidth(Bottom)) / 2
+	gc.LineTo(float64(rect.Min.X)+offset, float64(rect.Min.Y))
+
 	gc.Stroke()
 	//	gc.FillStroke()
 	gc.Restore()

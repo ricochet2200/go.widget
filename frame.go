@@ -25,8 +25,6 @@ type Frame struct {
 func NewFrame(parent Widget) *Frame {
 	ret := &Frame{NewSize(), FrameDefault, &Vertical{}, parent, Normal}
 	ret.layout = NewVertical(ret)
-	ret.SetBackground(Hover, NewBackground(c.Black))
-	ret.SetBorderColor(Hover, All, c.White)
 
 	if parent != nil {
 		parent.Layout().AddChild(ret)
@@ -126,19 +124,6 @@ func (this *Frame) Draw(img draw.Image) {
 
 	this.Box.Draw(img, this.state)
 	this.layout.Draw(img)
-
-	/*	this.DrawBackground(img, this.state)
-
-		gc := draw2d.NewGraphicContext(img)
-
-
-		gc.Save()
-		gc.SetStrokeColor(color.Black)
-		gc.SetFillColor(color.Black)
-		draw2d.Rect(gc, 10, 10, 100, 100)
-		gc.FillStroke()
-		gc.Restore() */
-
 }
 
 func (this *Frame) SetBorderWidth(state State, side Side, width int) {
