@@ -1,7 +1,7 @@
 package widget
 
 import (
-	//	"fmt"
+	"fmt"
 	"image"
 	"image/draw"
 	"math"
@@ -29,8 +29,11 @@ func (this *Vertical) Children() []Widget {
 }
 
 func (this *Vertical) Update() {
-	width := this.parent.Width()
-	height := this.parent.Height()
+
+	rect := this.parent.ContentRect()
+
+	width := rect.Dx()
+	height := rect.Dy()
 
 	pts := 0
 	for _, child := range this.children {
@@ -64,11 +67,15 @@ func (this *Vertical) ChildOffset(child Widget) image.Point {
 
 func (this *Vertical) Draw(img draw.Image) {
 
+	bounds := img.Bounds()
+	r := this.parent.ContentRect()
 	rgba := img.(*image.RGBA)
 	for i, child := range this.children {
-		rect := image.Rect(0, child.Height()*i, this.parent.Width(), child.Height()*(i+1))
-		sub := rgba.SubImage(rect)
-		child.Draw(sub.(draw.Image))
+		fmt.Println("child height - width: ", child.Height(), child.Width())
+
+		rect := image.Rect(r.Min.X, child.Height()*i+r.Min.Y, r.Min.X+child.Width(), r.Min.Y+child.Height()*(i+1))
+		fmt.Println("child draw rect:", rect, "bounds: ", bounds, "r:", r)
+		child.Draw(rgba.SubImage(rect).(draw.Image))
 	}
 }
 

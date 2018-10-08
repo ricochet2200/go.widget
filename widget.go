@@ -12,6 +12,11 @@ type Widget interface {
 	Layout() Layout
 	Offset() image.Point
 
+	// Rectangle indicating content region
+	ContentRect() image.Rectangle
+	// Rectangle that includes the border and content regions
+	BorderRect() image.Rectangle
+
 	Update()
 	Draw(draw.Image)
 

@@ -7,9 +7,9 @@ import (
 	"image/draw"
 )
 
-var FrameDefaultBorder = Border{Sides{map[Side]int{All: 1}}, map[Side]c.Color{All: c.Black}}
+var FrameDefaultBorder = Border{Sides{map[Side]int{All: 1}}, map[Side]c.Color{All: c.RGBA{255, 0, 0, 255}}}
 var FrameDefaultPadding = Padding{Sides{map[Side]int{All: 5}}}
-var FrameDefaultMargin = Margin{Sides{map[Side]int{All: 5}}}
+var FrameDefaultMargin = Margin{Sides{map[Side]int{All: 25}}}
 var FrameDefaultBackground = Background{c.White}
 var FrameDefaultNormalBoxState = &BoxState{FrameDefaultBackground, FrameDefaultBorder, FrameDefaultMargin, FrameDefaultPadding}
 var FrameDefault = &Box{map[State]*BoxState{Normal: FrameDefaultNormalBoxState}}
@@ -23,7 +23,8 @@ type Frame struct {
 }
 
 func NewFrame(parent Widget) *Frame {
-	ret := &Frame{NewSize(), FrameDefault, &Vertical{}, parent, Normal}
+	boxCopy := *FrameDefault
+	ret := &Frame{NewSize(), &boxCopy, &Vertical{}, parent, Normal}
 	ret.layout = NewVertical(ret)
 
 	if parent != nil {
@@ -121,33 +122,48 @@ func (this *Frame) Update() {
 }
 
 func (this *Frame) Draw(img draw.Image) {
+	fmt.Println("Frame Draw")
+	// This widget draws nothing in its margins.
+	borderImage := img.(*image.RGBA).SubImage(this.BorderRect()).(draw.Image)
+	this.Box.Draw(borderImage, this.state)
 
-	this.Box.Draw(img, this.state)
-	this.layout.Draw(img)
+	// Children should draw outside content rect
+	contentImage := img.(*image.RGBA).SubImage(this.ContentRect()).(draw.Image)
+	this.layout.Draw(contentImage)
 }
 
 func (this *Frame) SetBorderWidth(state State, side Side, width int) {
-	this.Box = this.Clone()
-	this.NewState(state)
-	this.Box.states[state].border.SetWidth(side, width)
+	this.Box.State(state).border.SetWidth(side, width)
 }
 func (this *Frame) SetBorderColor(state State, side Side, color c.Color) {
-	this.Box = this.Clone()
-	this.NewState(state)
-	this.Box.states[state].border.SetColor(side, color)
+	this.Box.State(state).border.SetColor(side, color)
 }
 func (this *Frame) SetBackground(state State, background *Background) {
-	this.Box = this.Clone()
-	this.NewState(state)
-	this.Box.states[state].background = *background
+	this.Box.State(state).background = *background
 }
 func (this *Frame) SetMargin(state State, side Side, width int) {
-	this.Box = this.Clone()
-	this.NewState(state)
-	this.Box.states[state].margin.SetWidth(side, width)
+	this.Box.State(state).margin.SetWidth(side, width)
 }
 func (this *Frame) SetPadding(state State, side Side, width int) {
-	this.Box = this.Clone()
-	this.NewState(state)
-	this.Box.states[state].padding.SetWidth(side, width)
+	this.Box.State(state).padding.SetWidth(side, width)
+}
+
+func (this *Frame) ContentRect() image.Rectangle {
+	rect := image.Rect(0, 0, this.Width(), this.Height())
+	box := this.Box.State(this.state)
+	rect.Min.Y += (box.Margin(Top) + box.BorderWidth(Top) + box.Padding(Top))
+	rect.Max.Y -= (box.Margin(Bottom) + box.BorderWidth(Bottom) + box.Padding(Bottom))
+	rect.Min.X += (box.Margin(Left) + box.BorderWidth(Left) + box.Padding(Left))
+	rect.Max.X -= (box.Margin(Right) + box.BorderWidth(Right) + box.Padding(Right))
+	return rect
+}
+
+func (this *Frame) BorderRect() image.Rectangle {
+	rect := image.Rect(0, 0, this.Width(), this.Height())
+	box := this.Box.State(this.state)
+	rect.Min.Y += box.Margin(Top)
+	rect.Max.Y -= box.Margin(Bottom)
+	rect.Min.X += box.Margin(Left)
+	rect.Max.X -= box.Margin(Right)
+	return rect
 }

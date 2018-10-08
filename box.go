@@ -3,7 +3,6 @@ package widget
 import (
 	"fmt"
 	"github.com/llgcode/draw2d/draw2dimg"
-	"image"
 	c "image/color"
 	"image/draw"
 )
@@ -102,61 +101,28 @@ type Box struct {
 }
 
 func (this *Box) State(state State) *BoxState {
-	v, ok := this.states[state]
-	if ok {
+	if v, ok := this.states[state]; ok {
 		return v
 	}
-	v, ok = this.states[Normal]
-	if !ok {
+
+	if v, ok := this.states[Normal]; !ok {
 		panic("Box must always have a Normal State")
-	}
-	return v
-}
-func (this *Box) NewState(state State) {
-	if _, ok := this.states[state]; !ok {
-		copy := *this.states[Normal]
+	} else {
+		copy := *v
 		this.states[state] = &copy
+		return this.states[state]
 	}
-}
-
-func (this *Box) Clone() *Box {
-	ret := &Box{map[State]*BoxState{}}
-	for k, v := range this.states {
-		ret.states[k] = v
-	}
-	return ret
-}
-
-func (this *Box) BorderImage(img draw.Image, state State) draw.Image {
-	box := this.State(state)
-	rect := img.Bounds()
-	rect.Min.Y += box.Margin(Top)
-	rect.Max.Y -= box.Margin(Bottom)
-	rect.Min.X += box.Margin(Left)
-	rect.Max.X -= box.Margin(Right)
-	return img.(*image.RGBA).SubImage(rect).(draw.Image)
-}
-
-func (this *Box) ContentImage(img draw.Image, state State) draw.Image {
-	box := this.State(state)
-	rect := img.Bounds()
-	rect.Min.Y += (box.Margin(Top) + box.BorderWidth(Top) + box.Padding(Top))
-	rect.Max.Y -= (box.Margin(Bottom) + box.BorderWidth(Bottom) + box.Padding(Bottom))
-	rect.Min.X += (box.Margin(Left) + box.BorderWidth(Left) + box.Padding(Left))
-	rect.Max.X -= (box.Margin(Right) + box.BorderWidth(Right) + box.Padding(Right))
-	return img.(*image.RGBA).SubImage(rect).(draw.Image)
 }
 
 func (this *Box) Draw(img draw.Image, state State) {
 
+	fmt.Println("box draw")
 	box := this.State(state)
-	borderImage := this.BorderImage(img, state)
 
-	box.background.Draw(borderImage)
+	box.background.Draw(img)
+	rect := img.Bounds()
 
-	rect := borderImage.Bounds()
-
-	fmt.Println("img bounds:", img.Bounds(), "bi bounds:", borderImage.Bounds())
+	fmt.Println("img bounds:", img.Bounds())
 	gc := draw2dimg.NewGraphicContext(img)
 
 	// Top
@@ -164,7 +130,8 @@ func (this *Box) Draw(img draw.Image, state State) {
 	gc.SetLineWidth(float64(box.BorderWidth(Top)))
 	offset := float64(box.BorderWidth(Top)) / 2
 	gc.MoveTo(float64(rect.Min.X)+offset, float64(rect.Min.Y)+offset)
-	gc.LineTo(float64(rect.Max.X)-offset, float64(rect.Min.Y)+offset)
+	gc.LineTo(float64(rect.Max.X)-offset+30, float64(rect.Min.Y)+offset)
+	fmt.Println(rect.Max.X, rect.Min.X)
 
 	// Right
 	fmt.Println("Right: ", box.BorderColor(Right), box.BorderWidth(Right))
@@ -186,6 +153,4 @@ func (this *Box) Draw(img draw.Image, state State) {
 	gc.LineTo(float64(rect.Min.X)+offset, float64(rect.Min.Y))
 
 	gc.Stroke()
-	//	gc.FillStroke()
-	gc.Restore()
 }

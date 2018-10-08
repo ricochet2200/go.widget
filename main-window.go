@@ -22,6 +22,7 @@ func NewMainWindow(width int, height int) *MainWindow {
 	f.width = width
 	f.height = height
 	w.Frame = f
+	w.Frame.SetMargin(Normal, All, 0)
 
 	return &w
 }
@@ -31,6 +32,7 @@ func (this *MainWindow) Draw(unused draw.Image) {
 	screen := this.window.Screen()
 	img := image.NewRGBA(image.Rect(0, 0, 500, 500))
 	this.Frame.Draw(img)
+
 	screen.CopyRGBA(img, img.Bounds())
 	this.window.FlushImage(img.Bounds())
 }

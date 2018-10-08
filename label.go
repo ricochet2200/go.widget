@@ -17,7 +17,7 @@ import (
 type Label struct {
 	*Frame
 	text func() string
-	img  image.Image
+	pic  image.Image
 	font *draw2d.FontData
 }
 
@@ -45,8 +45,12 @@ func NewLabelWithFunc(textFunc func() string, imagePath string, parent Widget) (
 		}
 		return &Label{NewFrame(parent), textFunc, nil, DefaultFont}, errors.New("File format not supported")
 	}
-	return &Label{NewFrame(parent), textFunc, nil, DefaultFont}, nil
+	ret := &Label{NewFrame(parent), textFunc, nil, DefaultFont}
 
+	if parent != nil {
+		parent.Layout().AddChild(ret)
+	}
+	return ret, nil
 }
 
 func NewLabel(text string, imagePath string, parent Widget) (*Label, error) {
@@ -60,4 +64,5 @@ func (this *Label) Draw(img draw.Image) {
 	gc.SetFontData(draw2d.FontData{"Monterey", draw2d.FontFamilyMono, draw2d.FontStyleBold | draw2d.FontStyleItalic})
 	gc.SetFontData(draw2d.FontData{"Monterey", draw2d.FontFamilyMono, draw2d.FontStyleBold | draw2d.FontStyleItalic})
 	gc.SetFontSize(18)
+	gc.FillStringAt(this.text(), 8, 52)
 }
